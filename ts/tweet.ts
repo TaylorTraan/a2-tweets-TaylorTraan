@@ -90,7 +90,33 @@ class Tweet {
     }
 
     getHTMLTableRow(rowNumber:number):string {
-        //TODO: return a table row which summarizes the tweet with a clickable link to the RunKeeper activity
-        return "<tr></tr>";
+        const numberCell = this.escapeHtml(String(rowNumber));
+        const activityCell = this.escapeHtml(this.activityType);
+        const tweetCell = this.getTweetTextWithClickableLinks();
+        return '<tr><td>' + numberCell + '</td><td>' + activityCell + '</td><td>' + tweetCell + '</td></tr>';
+    }
+
+    private escapeHtml(text:string):string {
+        return text
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;');
+    }
+
+    private getTweetTextWithClickableLinks():string {
+        const text = this.text;
+        const urlPattern = /https:\/\/t\.co\/\S+/g;
+        let result = '';
+        let lastIndex = 0;
+        let match;
+        while ((match = urlPattern.exec(text)) !== null) {
+            result += this.escapeHtml(text.substring(lastIndex, match.index));
+            const url = match[0];
+            result += '<a href="' + this.escapeHtml(url) + '" target="_blank" rel="noopener">' + this.escapeHtml(url) + '</a>';
+            lastIndex = urlPattern.lastIndex;
+        }
+        result += this.escapeHtml(text.substring(lastIndex));
+        return result;
     }
 }

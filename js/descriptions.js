@@ -1,4 +1,13 @@
-var tweet_array;
+var written_tweets;
+var search_index;
+
+function escapeHtml(text) {
+	return String(text)
+		.replace(/&/g, '&amp;')
+		.replace(/</g, '&lt;')
+		.replace(/>/g, '&gt;')
+		.replace(/"/g, '&quot;');
+}
 
 function parseTweets(runkeeper_tweets) {
 	if (runkeeper_tweets === undefined) {
@@ -6,9 +15,26 @@ function parseTweets(runkeeper_tweets) {
 		return;
 	}
 
-	tweet_array = runkeeper_tweets.map(function(tweet) {
+	var tweet_array = runkeeper_tweets.map(function(tweet) {
 		return new Tweet(tweet.text, tweet.created_at);
 	});
+
+	written_tweets = [];
+	for (var index = 0; index < tweet_array.length; index++) {
+		if (tweet_array[index].written) {
+			written_tweets.push(tweet_array[index]);
+		}
+	}
+
+	search_index = [];
+	for (var index = 0; index < written_tweets.length; index++) {
+		var tweet = written_tweets[index];
+		search_index.push({
+			lowerText: tweet.text.toLowerCase(),
+			activityEscaped: escapeHtml(tweet.activityType),
+			tweetCellHtml: tweet.getTweetTextWithClickableLinks()
+		});
+	}
 
 	addEventHandlerForSearch();
 	updateSearchAndTable();
@@ -21,47 +47,44 @@ function updateSearchAndTable() {
 	var searchCountSpan = document.getElementById('searchCount');
 	var tableBody = document.getElementById('tweetTable');
 
-	if (!searchTextSpan || !searchCountSpan || !tableBody || !tweet_array) return;
+	if (!searchTextSpan || !searchCountSpan || !tableBody) return;
 
 	searchTextSpan.innerText = query === '' ? '???' : query;
 
-	var lowerQuery = query.toLowerCase();
 	var matching = [];
-	for (var index = 0; index < tweet_array.length; index++) {
-		if (tweet_array[index].text.toLowerCase().indexOf(lowerQuery) >= 0) {
-			matching.push({ index: index + 1, tweet: tweet_array[index] });
+	if (search_index && query !== '') {
+		var lowerQuery = query.toLowerCase();
+		for (var index = 0; index < search_index.length; index++) {
+			if (search_index[index].lowerText.indexOf(lowerQuery) >= 0) {
+				matching.push(search_index[index]);
+			}
 		}
 	}
 
 	searchCountSpan.innerText = matching.length;
 
-	tableBody.innerHTML = '';
+	var html = '';
 	for (var row = 0; row < matching.length; row++) {
 		var item = matching[row];
-		var tr = document.createElement('tr');
-		var tdNumber = document.createElement('td');
-		var tdActivity = document.createElement('td');
-		var tdTweet = document.createElement('td');
-		tdNumber.innerText = item.index;
-		tdActivity.innerText = item.tweet.activityType || 'unknown';
-		tdTweet.innerText = item.tweet.text;
-		tr.appendChild(tdNumber);
-		tr.appendChild(tdActivity);
-		tr.appendChild(tdTweet);
-		tableBody.appendChild(tr);
+		html += '<tr><td>' + (row + 1) + '</td><td>' + item.activityEscaped + '</td><td>' + item.tweetCellHtml + '</td></tr>';
 	}
+	tableBody.innerHTML = html;
 }
 
 function addEventHandlerForSearch() {
 	var searchBox = document.getElementById('textFilter');
 	if (!searchBox) return;
+	var debounceMs = 80;
+	var timeoutId = null;
 	searchBox.addEventListener('input', function() {
-		updateSearchAndTable();
+		if (timeoutId) clearTimeout(timeoutId);
+		timeoutId = setTimeout(function() {
+			timeoutId = null;
+			updateSearchAndTable();
+		}, debounceMs);
 	});
 }
 
-//Wait for the DOM to load
-document.addEventListener('DOMContentLoaded', function (event) {
-	addEventHandlerForSearch();
+document.addEventListener('DOMContentLoaded', function () {
 	loadSavedRunkeeperTweets().then(parseTweets);
 });
