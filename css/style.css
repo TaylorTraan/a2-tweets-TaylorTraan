@@ -26,16 +26,3 @@ a:active {
 	display: block;
 	margin-bottom: 0.75rem;
 }
-
-.distance-charts-container {
-	position: relative;
-	min-height: 300px;
-}
-
-.distance-charts-container #distanceVis,
-.distance-charts-container #distanceVisAggregated {
-	position: absolute;
-	top: 0;
-	left: 0;
-	right: 0;
-}
