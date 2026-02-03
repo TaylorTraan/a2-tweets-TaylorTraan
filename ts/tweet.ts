@@ -43,19 +43,50 @@ class Tweet {
     }
 
     get activityType():string {
-        if (this.source != 'completed_event') {
-            return "unknown";
+        if (this.source !== 'completed_event') return 'unknown';
+        const t = this.text;
+        const kmIdx = t.indexOf(' km ');
+        const miIdx = t.indexOf(' mi ');
+        let unitEnd = -1;
+        if (kmIdx >= 0 && (miIdx < 0 || kmIdx <= miIdx)) {
+            unitEnd = kmIdx + 4;
+        } else if (miIdx >= 0) {
+            unitEnd = miIdx + 4;
         }
-        //TODO: parse the activity type from the text of the tweet
-        return "";
+        if (unitEnd < 0) return '';
+        const withIdx = t.indexOf(' with', unitEnd);
+        const dashIdx = t.indexOf(' - ', unitEnd);
+        let endIdx = t.length;
+        if (withIdx >= 0 && withIdx < endIdx) endIdx = withIdx;
+        if (dashIdx >= 0 && dashIdx < endIdx) endIdx = dashIdx;
+        return t.substring(unitEnd, endIdx).trim().toLowerCase();
     }
 
     get distance():number {
-        if(this.source != 'completed_event') {
-            return 0;
+        if (this.source !== 'completed_event') return 0;
+        const t = this.text;
+        const kmIdx = t.indexOf(' km ');
+        const miIdx = t.indexOf(' mi ');
+        let unitIdx = -1;
+        let isKm = false;
+        if (kmIdx >= 0 && (miIdx < 0 || kmIdx <= miIdx)) {
+            unitIdx = kmIdx;
+            isKm = true;
+        } else if (miIdx >= 0) {
+            unitIdx = miIdx;
         }
-        //TODO: prase the distance from the text of the tweet
-        return 0;
+        if (unitIdx <= 0) return 0;
+        let numEnd = unitIdx;
+        let numStart = numEnd - 1;
+        while (numStart >= 0 && (t[numStart] >= '0' && t[numStart] <= '9' || t[numStart] === '.')) {
+            numStart--;
+        }
+        numStart++;
+        const numStr = t.substring(numStart, numEnd);
+        const val = parseFloat(numStr);
+        if (isNaN(val)) return 0;
+        if (isKm) return val / 1.609;
+        return val;
     }
 
     getHTMLTableRow(rowNumber:number):string {
