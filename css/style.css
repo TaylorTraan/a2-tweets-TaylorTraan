@@ -17,3 +17,25 @@ a:active {
 	color: #B32B00;
 	text-decoration: underline;
 }
+
+.distance-charts-wrapper {
+	margin-bottom: 1rem;
+}
+
+.distance-charts-wrapper #aggregate {
+	display: block;
+	margin-bottom: 0.75rem;
+}
+
+.distance-charts-container {
+	position: relative;
+	min-height: 300px;
+}
+
+.distance-charts-container #distanceVis,
+.distance-charts-container #distanceVisAggregated {
+	position: absolute;
+	top: 0;
+	left: 0;
+	right: 0;
+}
