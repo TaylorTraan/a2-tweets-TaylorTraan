@@ -50,8 +50,16 @@ function parseTweets(runkeeper_tweets) {
 		}
 	}
 
+	// Written text (completed events only)
+	var writtenCount = 0;
+	for (var k = 0; k < total; k++) {
+		if (tweet_array[k].source === 'completed_event' && tweet_array[k].written) {
+			writtenCount++;
+		}
+	}
+
 	// Update DOM
-	// Date DOM
+	// Date
 	document.getElementById('numberTweets').innerText = total;
 	document.getElementById('firstDate').innerText = earliestDate.toLocaleDateString('en-US', dateOptions);
 	document.getElementById('lastDate').innerText = latestDate.toLocaleDateString('en-US', dateOptions);
@@ -68,6 +76,10 @@ function parseTweets(runkeeper_tweets) {
 
 	setAllByClass('miscellaneous', misc);
 	setAllByClass('miscellaneousPct', formatPct(misc, total));
+
+	// Written text (completed events only)
+	setAllByClass('written', writtenCount);
+	setAllByClass('writtenPct', formatPct(writtenCount, completed));
 }
 
 //Wait for the DOM to load

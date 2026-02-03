@@ -18,16 +18,28 @@ class Tweet {
 
     //returns a boolean, whether the text includes any content written by the person tweeting.
     get written():boolean {
-        //TODO: identify whether the tweet is written
-        return false;
+        if (this.source !== 'completed_event') return false;
+        const userPart = this.getStrippedUserPart();
+        if (userPart === '') return false;
+        const lower = userPart.toLowerCase();
+        const defaults = ['tomtom mysports watch', 'new pb on this route', 'fat burner (level 9)', 'treadmill walking', 'treadmill', 'mysports freestyle'];
+        return !defaults.some(d => lower === d || lower.startsWith(d + ' ') || lower.endsWith(' ' + d));
     }
 
     get writtenText():string {
-        if(!this.written) {
-            return "";
-        }
-        //TODO: parse the written text from the tweet
-        return "";
+        if (!this.written) return "";
+        return this.getStrippedUserPart().trim();
+    }
+
+    private getStrippedUserPart(): string {
+        let t = this.text
+            .replace(/#Runkeeper|#RKLive|#FitnessAlerts/gi, '')
+            .replace(/https:\/\/t\.co\/\S+/g, '')
+            .replace(/\s*with @Runkeeper\. Check it out!\s*/gi, '')
+            .trim();
+        const dashIndex = t.indexOf(' - ');
+        if (dashIndex === -1) return '';
+        return t.substring(dashIndex + 3).trim();
     }
 
     get activityType():string {
